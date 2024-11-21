@@ -1,11 +1,9 @@
-use std::os::raw::{*};
+use std::os::raw::{c_double, c_long};
 
 extern "C" {
     fn pi(x: c_long) -> c_double;
 }
 
-
 fn main() {
-    let p = unsafe { pi(10000000) };
-    println!("pi ~= {}", p);
+    dbg!(unsafe { pi(1000) });
 }
