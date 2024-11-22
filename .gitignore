@@ -1,7 +1,6 @@
-main
-*.o
-*.a
-build
-release
-debug
+/target
 
+.DS_Store
+.desktop.ini
+
+.vscode
