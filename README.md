@@ -1,3 +1,3 @@
-# Pi Assembly
+# π
 
-Compute pi in Assembly using VS Code.
+Approximate π using Leibniz's formula.
