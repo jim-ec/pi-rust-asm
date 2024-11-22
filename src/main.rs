@@ -8,9 +8,9 @@ fn pi(n: u64) -> f64 {
     unsafe {
         asm!(
             "1:",
-            // Loop exit condition
+            // Exit loop if i >= n
             "cmp {i}, {n}",
-            "bge 4f",
+            "bge 2f",
 
             // Compute 2i + 1:
             // - Shift i left by 1 to multiply by 2
@@ -24,33 +24,27 @@ fn pi(n: u64) -> f64 {
             "fdiv {term:d}, {four:d}, {term:d}",
 
             // Alternate between adding and subtracting the term
-            // - Extract LSB of i
+            // - Extract LSB of i, if not set add the term, otherwise subtract it
             "and {lsb}, {i}, 1",
-            // - Compare LSB to zero
-            "cmp {lsb}, 0",
-            // - If LSB is not zero, LSB is set to the sign-bit mask, otherwise it is zero
-            "csel {lsb}, {mask}, xzr, ne",
-            // - Move LSB to a SIMD register
-            "fmov {tmp:d}, {lsb}",
-            // - Xor the term with the sign-bit mask or zero to flip the sign bit if necessary
-            "eor {term:v}.16b, {term:v}.16b, {tmp:v}.16b",
+            // - Move the term into a scalar register
+            "fmov {term_int}, {term:d}",
+            // - Move the LSB to the sign bit position
+            "bfi {term_int}, {lsb}, 63, 1",
+            // - Move the term back to a SIMD register
+            "fmov {term:d}, {term_int}",
             // - Add the possibly negated term to the sum
             "fadd {sum:d}, {sum:d}, {term:d}",
 
-            // End of loop, increment i
-            "3:",
+            // Increment i, jump back
             "add {i}, {i}, 1",
             "b 1b",
 
-            // End of iteration
-            "4:",
+            "2:",
 
             n = in(reg) n,
             i = in(reg) 0_u64,
             lsb = out(reg) _,
-            mask = in(reg) 0x8000000000000000_u64,
             sum = inout(vreg) sum,
-            tmp = out(vreg) _,
             four = in(vreg) 4.0,
             term_int = out(reg) _,
             term = out(vreg) _,
